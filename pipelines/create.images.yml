@@ -15,6 +15,9 @@ parameters:
   - name: resourceGroup
     displayName: Resource Group Name
     type: string
+  - name: tempResourceGroup
+    displayName: Temporary Resource Group Name used to Deploy VMs for image creation
+    type: string
   - name: imageStorageAccountName
     displayName: Storage Account Name for Managed Image
     type: string
@@ -73,7 +76,7 @@ jobs:
           "client_secret": "$(SERVICE_PRINCIPAL_KEY)",
           "subscription_id": "$(SUBSCRIPTION_ID)",
           "tenant_id": "$(TENANT_ID)",
-          "location": "${{ parameters.location }}",
+          "build_resource_group_name": "${{ parameters.tempResourceGroup }}",
           "resource_group": "${{ parameters.resourceGroup }}",
           "storage_account": "${{ parameters.imageStorageAccountName }}",
           "capture_name_prefix": "${{ variables.imageType }}"
@@ -84,6 +87,8 @@ jobs:
         storageAccountName: ${{ parameters.imageStorageAccountName }}
         azureResourceGroup: ${{ parameters.resourceGroup }}
         imageUri: PACKER_VHD_FILE_URI
+
+          # "location": "${{ parameters.location }}",
 
     - task: AzureCLI@2
       displayName: Create Managed Image and Add to Image Gallery

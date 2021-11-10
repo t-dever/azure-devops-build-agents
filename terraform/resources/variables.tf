@@ -8,3 +8,13 @@ variable "user_principal_id" {
 variable "storage_account_name" {
   description = "The name of the storage account used."
 }
+
+variable "image_storage_account_name" {
+  description = "The name of the storage account to store images."
+  default = replace("${var.resource_prefix}imagesa", "-", "")
+}
+
+variable "image_gallery_name" {
+  description = "The image gallery name"
+  default = replace("${var.resource_prefix}-image-gallery", "-", "")
+}

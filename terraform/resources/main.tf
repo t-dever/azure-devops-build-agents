@@ -28,7 +28,7 @@ resource "azurerm_role_assignment" "storage_account_user_contributor" {
 }
 
 resource "azurerm_storage_account" "images_storage_account" {
-  name                     = replace("${var.resource_prefix}imagesa", "-", "")
+  name                     = var.image_storage_account_name
   resource_group_name      = data.azurerm_resource_group.resource_group.name
   location                 = data.azurerm_resource_group.resource_group.location
   account_tier             = "Standard"
@@ -36,7 +36,7 @@ resource "azurerm_storage_account" "images_storage_account" {
 }
 
 resource "azurerm_shared_image_gallery" "image_gallery" {
-  name                = replace("${var.resource_prefix}-image-gallery", "-", "")
+  name                = var.image_gallery_name
   resource_group_name = data.azurerm_resource_group.resource_group.name
   location            = data.azurerm_resource_group.resource_group.location
   description         = "Shared build agent images."

@@ -11,13 +11,7 @@ resources:
     ref: features/addInitialDeployment
 
 variables:
-  - group: aviatrix-variables
-  - name: storageAccountName
-    value: travistestagentstatesa
-  - name: imageStorageAccountName
-    value: travistestagentimagesa
-  - name: imageGalleryName
-    value: travistestagentimagegallery
+  - group: build-agents
 stages:
 - stage: DeployBuildAgentResources
   displayName: Deploy Build Agent Resource Group
@@ -27,11 +21,12 @@ stages:
     - template: pipelines/deploy.resources.yml@buildAgentRepo
       parameters:
         serviceConnectionName: TRAVIS_CONNECTION
-        resourceGroup: travis-test-agent-rg
-        location: "South Central US"
+        resourceGroup: $(resourceGroup)
+        tempResourceGroup: $(tempResourceGroup)
+        location: $(location)
         storageAccountName: $(storageAccountName)
         storageContainerName: tfstate
-        resourcePrefix: travis-test-agent
+        resourcePrefix: $(resourcePrefix)
         userPrincipalId: "$(userPrincipalId)" # Object ID of your account
 
 - stage: CreateUbuntu20Image
@@ -41,9 +36,10 @@ stages:
       parameters:
         serviceConnectionName: TRAVIS_CONNECTION
         tagFilter: ubuntu20
-        resourceGroup: travis-test-agent-rg
+        resourceGroup: $(resourceGroup)
+        tempResourceGroup: $(tempResourceGroup)
         imageStorageAccountName: $(imageStorageAccountName)
-        location: "South Central US"
+        location: $(location)
         imageGalleryName: $(imageGalleryName)
 
 - stage: CreateUbuntu18Image
@@ -53,13 +49,14 @@ stages:
       parameters:
         serviceConnectionName: TRAVIS_CONNECTION
         tagFilter: ubuntu18
-        resourceGroup: travis-test-agent-rg
+        resourceGroup: $(resourceGroup)
+        tempResourceGroup: $(tempResourceGroup)
         imageStorageAccountName: $(imageStorageAccountName)
-        location: "South Central US"
+        location: $(location)
         imageGalleryName: $(imageGalleryName)
 
         # storageContainerName: tfstate
-        # resourcePrefix: travis-test-agent
+        # resourcePrefix: $(resourcePrefix)
         # userPrincipalId: "$(userPrincipalId)" # Object ID of your account
 
 
