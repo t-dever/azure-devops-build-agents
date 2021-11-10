@@ -19,14 +19,16 @@ stages:
   jobs:
   - job: Deploy
     steps:
-    # - template: pipelines/resource.group.pipeline.yml@buildAgentRepo
-    #   parameters:
-    #     serviceConnectionName: TRAVIS_CONNECTION
-    #     resourceGroup: travis-test-agent-rg
-    #     location: "South Central US"
-    #     storageAccountName: travistestagentstatesa
-    #     storageContainerName: tfstate
-    #     resourcePrefix: travis-test-agent
-    #     userPrincipalId: "$(userPrincipalId)" # Object ID of your account
-    #     scaleSetSpotInstance: false
-    #     createUbuntu20ScaleSet: false
+    - template: pipelines/deploy.resources.yml@buildAgentRepo
+      parameters:
+        serviceConnectionName: TRAVIS_CONNECTION
+        resourceGroup: travis-test-agent-rg
+        location: "South Central US"
+        storageAccountName: travistestagentstatesa
+        storageContainerName: tfstate
+        resourcePrefix: travis-test-agent
+        userPrincipalId: "$(userPrincipalId)" # Object ID of your account
+
+
+        # scaleSetSpotInstance: false
+        # createUbuntu20ScaleSet: false
