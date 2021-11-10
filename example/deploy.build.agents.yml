@@ -17,7 +17,7 @@ stages:
 - stage: DeployBuildAgentResources
   displayName: Deploy Build Agent Resource Group
   jobs:
-  - job: Deploy
+  - job: DeployBuildAgentResourcesJob
     steps:
     - template: pipelines/deploy.resources.yml@buildAgentRepo
       parameters:

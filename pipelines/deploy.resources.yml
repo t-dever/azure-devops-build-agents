@@ -72,13 +72,12 @@ steps:
   - script: |
       terraform init \
         -backend-config="storage_account_name=${{ parameters.storageAccountName }}" \
-        -backend-config="key=resources.tfstate" \
-        -backend-config="container_name=${{ parameters.storageContainerName }}" \
         -backend-config="subscription_id=$(SUBSCRIPTION_ID)" \
         -backend-config="tenant_id=$(TENANT_ID)"
       terraform plan -out=config \
         -var 'resource_prefix=${{ parameters.resourcePrefix }}' \
-        -var 'user_principal_id=${{ parameters.userPrincipalId }}'
+        -var 'user_principal_id=${{ parameters.userPrincipalId }}' \
+        -var 'storage_account_name=${{ parameters.storageAccountName }}'
       terraform apply config
     workingDirectory: terraform/resources
     displayName: Perform Terraform Operations

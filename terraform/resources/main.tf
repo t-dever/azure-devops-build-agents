@@ -1,30 +1,3 @@
-terraform {
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "2.80.0"
-    }
-    local = {
-      source  = "hashicorp/local"
-      version = "2.1.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "3.1.0"
-    }
-  }
-}
-
-provider "azurerm" {
-  features {
-    key_vault {
-      purge_soft_delete_on_destroy = true
-    }
-  }
-  skip_provider_registration = true
-  storage_use_azuread        = true
-}
-
 data "azurerm_client_config" "current" {}
 
 data "azurerm_resource_group" "resource_group" {
@@ -32,7 +5,7 @@ data "azurerm_resource_group" "resource_group" {
 }
 
 data "azurerm_storage_account" "storage_account" {
-  name                = replace("${var.resource_prefix}sa", "-", "")
+  name                = var.storage_account_name
   resource_group_name = data.azurerm_resource_group.resource_group.name
 }
 

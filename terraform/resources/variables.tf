@@ -4,3 +4,7 @@ variable "resource_prefix" {
 variable "user_principal_id" {
   description = "The ID of the user that needs to access the key vault via Azure Portal GUI. This is used to give key vault secrets officer role"
 }
+
+variable "storage_account_name" {
+  description = "The name of the storage account used."
+}
