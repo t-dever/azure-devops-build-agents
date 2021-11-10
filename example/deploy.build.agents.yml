@@ -32,6 +32,8 @@ stages:
         resourcePrefix: travis-test-agent
         userPrincipalId: "$(userPrincipalId)" # Object ID of your account
 
+- stage: CreateUbuntu20Image
+  jobs:
     - template: pipelines/create.images.yml@buildAgentRepo
       parameters:
         serviceConnectionName: TRAVIS_CONNECTION
@@ -40,7 +42,9 @@ stages:
         imageStorageAccountName: $(imageStorageAccountName)
         location: "South Central US"
         imageGalleryName: travisbuildagentimagegallery
-        
+
+- stage: CreateUbuntu18Image
+  jobs:
     - template: pipelines/create.images.yml@buildAgentRepo
       parameters:
         serviceConnectionName: TRAVIS_CONNECTION
