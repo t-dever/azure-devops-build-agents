@@ -87,7 +87,7 @@ steps:
       terraform plan -out=config \
         -var 'resource_prefix=${{ parameters.resourcePrefix }}' \
         -var 'user_principal_id=${{ parameters.userPrincipalId }}' \
-        -var 'storage_account_name=${{ parameters.storageContainerName }}' \
+        -var 'storage_account_name=${{ parameters.storageAccountName }}' \
         -var 'image_storage_account_name=${{ parameters.imageStorageAccountName }}' \
         -var 'image_gallery_name=${{ parameters.imageGalleryName }}'
       terraform apply config
