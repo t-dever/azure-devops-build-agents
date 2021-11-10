@@ -15,7 +15,7 @@ parameters:
   - name: resourceGroup
     displayName: Resource Group Name
     type: string
-  - name: storageAccountName
+  - name: imageStorageAccountName
     displayName: Storage Account Name for Managed Image
     type: string
   - name: location
@@ -75,13 +75,13 @@ jobs:
           "tenant_id": "$(TENANT_ID)",
           "location": "${{ parameters.location }}",
           "resource_group": "${{ parameters.resourceGroup }}",
-          "storage_account": "${{ parameters.storageAccountName }}",
+          "storage_account": "${{ parameters.imageStorageAccountName }}",
           "capture_name_prefix": "${{ variables.imageType }}"
           }'
         isManagedImage: true 
         managedImageName: ${{ variables.imageType }}
         location: ${{ parameters.location }}
-        storageAccountName: ${{ parameters.storageAccountName }}
+        storageAccountName: ${{ parameters.imageStorageAccountName }}
         azureResourceGroup: ${{ parameters.resourceGroup }}
         imageUri: PACKER_VHD_FILE_URI
 
@@ -116,5 +116,5 @@ jobs:
           az image delete --ids $imageId
           az storage blob delete-batch \
             -s system \
-            --account-name ${{ parameters.storageAccountName }} \
+            --account-name ${{ parameters.imageStorageAccountName }} \
             --pattern Microsoft.Compute/Images/images/${{ variables.imageType }}*
