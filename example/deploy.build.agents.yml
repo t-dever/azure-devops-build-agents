@@ -8,7 +8,7 @@ resources:
     type: github
     endpoint: t-dever
     name: t-dever/azure-devops-build-agents
-    ref: main
+    ref: features/addInitialDeployment
 
 variables:
   - group: aviatrix-variables
