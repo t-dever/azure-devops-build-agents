@@ -1,0 +1,174 @@
+parameters:
+  - name: serviceConnectionName
+    displayName: Service Connection Name
+    type: string
+  - name: templateRepoPath
+    displayName: Path for cloning build repo
+    type: string
+    default: agents
+  - name: tagFilter
+    displayName: Tag Filter
+    type: string
+    values:
+      - ubuntu20
+      - ubuntu18
+  - name: resourceGroup
+    displayName: Resource Group Name
+    type: string
+  - name: storageAccountName
+    displayName: Storage Account Name for Managed Image
+    type: string
+  - name: location
+    displayName: Resource Group Location
+    type: string
+
+jobs:
+- job: Create${{ parameters.tagFilter }}
+  timeoutInMinutes: 480
+  variables:
+    ${{ if eq(parameters.tagFilter, 'ubuntu20') }}:
+      imageType: ubuntu2004
+      osType: Linux
+      image_packer_file: $(Build.SourcesDirectory)/${{ parameters.templateRepoPath }}/images/linux/ubuntu2004.json
+    ${{ if eq(parameters.tagFilter, 'ubuntu18') }}:
+      imageType: ubuntu1804
+      osType: Linux
+      image_packer_file: $(Build.SourcesDirectory)/${{ parameters.templateRepoPath }}/images/linux/ubuntu1804.json
+
+  steps:
+    # - ${{ if eq(parameters.tagFilter, 'ubuntu20') }}:
+    #   - task: AzureCLI@2
+    #     displayName: Set Ubuntu2004 Variables
+    #     inputs:
+    #       azureSubscription: ${{ parameters.serviceConnectionName }}
+    #       scriptType: bash
+    #       scriptLocation: inlineScript
+    #       inlineScript: |
+    #         echo "##vso[task.setvariable variable=imageType;]ubuntu2004"
+    #         echo "##vso[task.setvariable variable=osType;]Linux"
+    #         echo "##vso[task.setvariable variable=image_packer_file;]$(Build.SourcesDirectory)/${{ parameters.templateRepoPath }}/images/linux/ubuntu2004.json"
+
+    # - ${{ if eq(parameters.tagFilter, 'ubuntu1804') }}:
+    #   - task: AzureCLI@2
+    #     displayName: Set Ubuntu1804 Variables
+    #     inputs:
+    #       azureSubscription: ${{ parameters.serviceConnectionName }}
+    #       scriptType: bash
+    #       scriptLocation: inlineScript
+    #       inlineScript: |
+    #         echo "##vso[task.setvariable variable=imageType;]ubuntu1804"
+    #         echo "##vso[task.setvariable variable=osType;]Linux"
+    #         echo "##vso[task.setvariable variable=image_packer_file;]$(Build.SourcesDirectory)/${{ parameters.templateRepoPath }}/images/linux/ubuntu1804.json"
+
+
+    - task: AzureCLI@2
+      displayName: Get Service Connection Information
+      inputs:
+        azureSubscription: ${{ parameters.serviceConnectionName }}
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          subscription_id=$(az account show -o json --query id | sed -e 's/^"//' -e 's/"$//')
+          echo "##vso[task.setvariable variable=SUBSCRIPTION_ID;]$subscription_id"
+          echo "##vso[task.setvariable variable=SERVICE_PRINCIPAL_ID;]$servicePrincipalId"
+          echo "##vso[task.setvariable variable=SERVICE_PRINCIPAL_KEY;]$servicePrincipalKey"
+          echo "##vso[task.setvariable variable=TENANT_ID;]$tenantId"
+        addSpnToEnvironment: true
+
+    - task: Bash@3
+      displayName: "Checkout Microsofts Build Agent Repo"
+      inputs:
+        targetType: 'inline'
+        script: |
+          mkdir ${{ parameters.templateRepoPath }}
+          git clone https://github.com/actions/virtual-environments.git ${{ parameters.templateRepoPath }}
+          cd ${{ parameters.templateRepoPath }}
+          # LATEST_TAG=`git tag --sort=committerdate | grep -i "${{ parameters.tagFilter }}" | tail -1`
+          # git checkout $LATEST_TAG
+
+    # - task: UsePythonVersion@0
+    #   inputs:
+    #     versionSpec: "3.x"
+    #     addToPath: true
+
+    # - task: PythonScript@0
+    #   inputs:
+    #     scriptSource: 'filePath'
+    #     scriptPath: scripts/update_packer_file.py
+    #   env:
+    #     PACKER_FILE_LOCATION: ${{ variables.image_packer_file}}
+    #     SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
+    #     RESOURCE_GROUP_NAME: ${{ parameters.resourceGroup }}
+    #     IMAGE_GALLERY_NAME: "travisbuildagentimagegallery"
+    #     IMAGE_NAME: ${{ variables.imageType }}
+    #     IMAGE_VERSION: $(Date:MM).$(Date:dd).$(Date:yyyy)
+    #     REPLICATED_REGIONS: ${{ parameters.location }}
+    #     #failOnStderr: false # Optional
+
+    - task: PackerBuild@1
+      inputs:
+        templateType: custom
+        customTemplateLocation: ${{ variables.image_packer_file}}
+        customTemplateParameters: '{
+          "client_id": "$(SERVICE_PRINCIPAL_ID)",
+          "client_secret": "$(SERVICE_PRINCIPAL_KEY)",
+          "subscription_id": "$(SUBSCRIPTION_ID)",
+          "tenant_id": "$(TENANT_ID)",
+          "location": "${{ parameters.location }}",
+          "resource_group": "${{ parameters.resourceGroup }}",
+          "storage_account": "${{ parameters.storageAccountName }}",
+          "capture_name_prefix": "${{ variables.imageType }}"
+          }'
+        isManagedImage: true 
+        managedImageName: ${{ variables.imageType }}
+        location: ${{ parameters.location }}
+        storageAccountName: ${{ parameters.storageAccountName }}
+        azureResourceGroup: ${{ parameters.resourceGroup }}
+        imageUri: PACKER_VHD_FILE_URI
+
+    - task: AzureCLI@2
+      displayName: Create Managed Image and Add to Image Gallery
+      inputs:
+        azureSubscription: ${{ parameters.serviceConnectionName }}
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          date=$(date '+%Y.%m.%d')
+          imageId=$(az image create \
+            -g ${{ parameters.resourceGroup }} \
+            -n ${{ variables.imageType }} \
+            --os-type ${{ variables.osType}} \
+            --source $(PACKER_VHD_FILE_URI) \
+            -o json --query id | sed -e 's/^"//' -e 's/"$//')
+          az sig image-definition create \
+            --resource-group ${{ parameters.resourceGroup }} \
+            --gallery-image-definition ${{ variables.imageType }} \
+            --gallery-name "travisbuildagentimagegallery" \
+            --os-type ${{ variables.osType}} \
+            --publisher "self" \
+            --offer ${{ variables.imageType }} \
+            --sku "latest"
+          az sig image-version create \
+            --resource-group ${{ parameters.resourceGroup }} \
+            --gallery-name "travisbuildagentimagegallery" \
+            --gallery-image-definition ${{ variables.imageType }} \
+            --gallery-image-version "$date" \
+            --managed-image $imageId
+          az image delete --ids $imageId
+          az storage blob delete-batch \
+            -s system \
+            --account-name ${{ parameters.storageAccountName }} \
+            --pattern Microsoft.Compute/Images/images/${{ variables.imageType }}*
+        addSpnToEnvironment: true
+
+        #         additionalBuilderParameters: '{
+        #   "shared_image_gallery_destination": {
+        #     "subscription": "$(SUBSCRIPTION_ID)",
+        #     "resource_group": "${{ parameters.resourceGroup }}",
+        #     "gallery_name": "travisbuildagentimagegallery",
+        #     "image_name": "$(imageType)",
+        #     "image_version": "$(Date:MM).$(Date:dd).$(Date:yyyy)",
+        #     "replication_regions": ["southcentralus"],
+        #     "storage_account_type": "Standard_LRS"
+        #     }
+        #   }'

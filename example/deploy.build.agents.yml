@@ -1,0 +1,32 @@
+trigger: none
+pool:
+  vmImage: ubuntu-latest
+
+resources:
+  repositories:
+  - repository: buildAgentRepo
+    type: github
+    endpoint: t-dever
+    name: t-dever/azure-devops-build-agents
+    ref: main
+
+variables:
+  - group: aviatrix-variables
+
+stages:
+- stage: DeployBuildAgentResources
+  displayName: Deploy Build Agent Resource Group
+  jobs:
+  - job: Deploy
+    steps:
+    - template: pipelines/resource.group.pipeline.yml@buildAgentRepo
+      parameters:
+        serviceConnectionName: TRAVIS_CONNECTION
+        resourceGroup: travis-test-agent-rg
+        location: "South Central US"
+        storageAccountName: travistestagentstatesa
+        storageContainerName: tfstate
+        resourcePrefix: travis-test-agent
+        userPrincipalId: "$(userPrincipalId)" # Object ID of your account
+        scaleSetSpotInstance: false
+        createUbuntu20ScaleSet: false

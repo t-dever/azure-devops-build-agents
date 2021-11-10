@@ -1,0 +1,98 @@
+parameters:
+  - name: serviceConnectionName
+    displayName: Service Connection Name
+    type: string
+  - name: resourcePrefix
+    displayName: Resource prefix
+    type: string
+  - name: userPrincipalId
+    displayName: User Principal Object ID
+    type: string
+  - name: scaleSetSpotInstance
+    displayName: Scale Set Spot Instance?
+    type: boolean
+  - name: createUbuntu20ScaleSet
+    displayName: Create Ubuntu20 Scale Set?
+    type: boolean
+  - name: resourceGroup
+    displayName: Resource Group Name
+    type: string
+  - name: location
+    displayName: Resource Group Location
+    type: string
+  - name: storageAccountName
+    displayName: Storage Account Name
+    type: string
+  - name: storageContainerName
+    displayName: Storage Container used for tf state
+    type: string
+    default: "tfstate"
+
+steps:
+  - task: AzureCLI@2
+    displayName: Get Service Connection Information
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnectionName }}
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        subscription_id=$(az account show -o json --query id | sed -e 's/^"//' -e 's/"$//')
+        object_id=$(az ad sp show --id $servicePrincipalId -o json --query objectId | sed -e 's/^"//' -e 's/"$//')
+        echo "##vso[task.setvariable variable=SUBSCRIPTION_ID;]$subscription_id"
+        echo "##vso[task.setvariable variable=SERVICE_PRINCIPAL_ID;]$servicePrincipalId"
+        echo "##vso[task.setvariable variable=SERVICE_PRINCIPAL_KEY;]$servicePrincipalKey"
+        echo "##vso[task.setvariable variable=SERVICE_PRINCIPAL_OBJECT_ID;]$object_id"
+        echo "##vso[task.setvariable variable=TENANT_ID;]$tenantId"
+      addSpnToEnvironment: true
+
+  - task: AzureCLI@2
+    displayName: Create Resource Group, Storage Account and Container
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnectionName }}
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        az group create --location "${{ parameters.location }}" --name "${{ parameters.resourceGroup }}"
+        az storage account create \
+          --name ${{ parameters.storageAccountName }} \
+          --resource-group "${{ parameters.resourceGroup }}" \
+          --https-only true \
+          --location "${{ parameters.location }}" \
+          --sku Standard_GRS \
+          --kind StorageV2 \
+          --allow-blob-public-access false \
+          --allow-shared-key-access false \
+          --min-tls-version TLS1_2
+        az role assignment create \
+          --role "Storage Blob Data Owner" \
+          --scope "/subscriptions/$(SUBSCRIPTION_ID)/resourceGroups/${{ parameters.resourceGroup }}/providers/Microsoft.Storage/storageAccounts/${{ parameters.storageAccountName }}" \
+          --assignee-principal-type ServicePrincipal \
+          --assignee-object-id $(SERVICE_PRINCIPAL_OBJECT_ID) \
+          --subscription $(SUBSCRIPTION_ID)
+        az storage container create \
+          --name ${{ parameters.storageContainerName }} \
+          --account-name ${{ parameters.storageAccountName }} \
+          --auth-mode login \
+          --public-access off
+      addSpnToEnvironment: true
+
+  - script: |
+      terraform init \
+        -backend-config="storage_account_name=${{ parameters.storageAccountName }}" \
+        -backend-config="key=build.agent.rg" \
+        -backend-config="container_name=${{ parameters.storageContainerName }}" \
+        -backend-config="subscription_id=$(SUBSCRIPTION_ID)" \
+        -backend-config="tenant_id=$(TENANT_ID)"
+      terraform plan -out=config \
+        -var 'resource_prefix=${{ parameters.resourcePrefix }}' \
+        -var 'user_principal_id=${{ parameters.userPrincipalId }}' \
+        -var 'scale_set_spot_instance=${{ lower(parameters.scaleSetSpotInstance) }}' \
+        -var 'create_ubuntu20_scale_set=${{ lower(parameters.createUbuntu20ScaleSet) }}'
+      terraform apply config
+    workingDirectory: terraform/build_agents
+    displayName: Perform Terraform Operations
+    env:
+      ARM_CLIENT_ID: $(SERVICE_PRINCIPAL_ID)
+      ARM_SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
+      ARM_TENANT_ID: $(TENANT_ID)
+      ARM_CLIENT_SECRET:  $(SERVICE_PRINCIPAL_KEY)
