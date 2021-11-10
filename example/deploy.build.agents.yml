@@ -28,6 +28,8 @@ stages:
         storageContainerName: tfstate
         resourcePrefix: $(resourcePrefix)
         userPrincipalId: "$(userPrincipalId)" # Object ID of your account
+        imageStorageAccountName: $(imageStorageAccountName)
+        imageGalleryName: $(imageGalleryName)
 
 - stage: CreateUbuntu20Image
   dependsOn: [DeployBuildAgentResources]
