@@ -16,6 +16,8 @@ variables:
     value: travistestagentstatesa
   - name: imageStorageAccountName
     value: travistestagentimagesa
+  - name: imageGalleryName
+    value: travistestagentimagegallery
 stages:
 - stage: DeployBuildAgentResources
   displayName: Deploy Build Agent Resource Group
@@ -42,7 +44,7 @@ stages:
         resourceGroup: travis-test-agent-rg
         imageStorageAccountName: $(imageStorageAccountName)
         location: "South Central US"
-        imageGalleryName: travisbuildagentimagegallery
+        imageGalleryName: $(imageGalleryName)
 
 - stage: CreateUbuntu18Image
   dependsOn: [DeployBuildAgentResources]
@@ -54,7 +56,7 @@ stages:
         resourceGroup: travis-test-agent-rg
         imageStorageAccountName: $(imageStorageAccountName)
         location: "South Central US"
-        imageGalleryName: travisbuildagentimagegallery
+        imageGalleryName: $(imageGalleryName)
 
         # storageContainerName: tfstate
         # resourcePrefix: travis-test-agent
