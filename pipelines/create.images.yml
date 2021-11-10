@@ -21,6 +21,9 @@ parameters:
   - name: location
     displayName: Resource Group Location
     type: string
+  - name: imageGalleryName
+    type: string
+    displayName: Image Gallery Name
 
 jobs:
 - job: Create${{ parameters.tagFilter }}
@@ -99,14 +102,14 @@ jobs:
           az sig image-definition create \
             --resource-group ${{ parameters.resourceGroup }} \
             --gallery-image-definition ${{ variables.imageType }} \
-            --gallery-name "travisbuildagentimagegallery" \
+            --gallery-name "${{ parameters.imageGalleryName }}" \
             --os-type ${{ variables.osType}} \
             --publisher "self" \
             --offer ${{ variables.imageType }} \
             --sku "latest"
           az sig image-version create \
             --resource-group ${{ parameters.resourceGroup }} \
-            --gallery-name "travisbuildagentimagegallery" \
+            --gallery-name "${{ parameters.imageGalleryName }}" \
             --gallery-image-definition ${{ variables.imageType }} \
             --gallery-image-version "$date" \
             --managed-image $imageId

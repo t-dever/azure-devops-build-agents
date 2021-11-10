@@ -12,7 +12,10 @@ resources:
 
 variables:
   - group: aviatrix-variables
-
+  - name: storageAccountName
+    value: travistestagentstatesa
+  - name: imageStorageAccountName
+    value: travistestagentimagesa
 stages:
 - stage: DeployBuildAgentResources
   displayName: Deploy Build Agent Resource Group
@@ -24,10 +27,32 @@ stages:
         serviceConnectionName: TRAVIS_CONNECTION
         resourceGroup: travis-test-agent-rg
         location: "South Central US"
-        storageAccountName: travistestagentstatesa
+        storageAccountName: $(storageAccountName)
         storageContainerName: tfstate
         resourcePrefix: travis-test-agent
         userPrincipalId: "$(userPrincipalId)" # Object ID of your account
+
+    - template: pipelines/create.images.yml@buildAgentRepo
+      parameters:
+        serviceConnectionName: TRAVIS_CONNECTION
+        tagFilter: ubuntu20
+        resourceGroup: travis-test-agent-rg
+        imageStorageAccountName: $(imageStorageAccountName)
+        location: "South Central US"
+        imageGalleryName: travisbuildagentimagegallery
+        
+    - template: pipelines/create.images.yml@buildAgentRepo
+      parameters:
+        serviceConnectionName: TRAVIS_CONNECTION
+        tagFilter: ubuntu18
+        resourceGroup: travis-test-agent-rg
+        imageStorageAccountName: $(imageStorageAccountName)
+        location: "South Central US"
+        imageGalleryName: travisbuildagentimagegallery
+
+        # storageContainerName: tfstate
+        # resourcePrefix: travis-test-agent
+        # userPrincipalId: "$(userPrincipalId)" # Object ID of your account
 
 
         # scaleSetSpotInstance: false
