@@ -33,6 +33,7 @@ stages:
         userPrincipalId: "$(userPrincipalId)" # Object ID of your account
 
 - stage: CreateUbuntu20Image
+  dependsOn: [DeployBuildAgentResources]
   jobs:
     - template: pipelines/create.images.yml@buildAgentRepo
       parameters:
@@ -44,6 +45,7 @@ stages:
         imageGalleryName: travisbuildagentimagegallery
 
 - stage: CreateUbuntu18Image
+  dependsOn: [DeployBuildAgentResources]
   jobs:
     - template: pipelines/create.images.yml@buildAgentRepo
       parameters:
