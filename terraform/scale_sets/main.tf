@@ -9,7 +9,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "ubuntu20_virtual_machine_sca
   resource_group_name             = data.terraform_remote_state.resources_state.outputs.resource_group_name
   location                        = data.terraform_remote_state.resources_state.outputs.resource_group_location
   sku                             = "Standard_D2_v3"
-  instances                       = 0
+  instances                       = 1
   admin_username                  = "builderAdmin"
   admin_password                  = data.terraform_remote_state.resources_state.outputs.build_agent_secret
   source_image_id                 = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${data.terraform_remote_state.resources_state.outputs.resource_group_name}/providers/Microsoft.Compute/galleries/${var.shared_image_gallery_name}/images/ubuntu2004"
