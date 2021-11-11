@@ -1,0 +1,66 @@
+parameters:
+  - name: serviceConnectionName
+    displayName: Service Connection Name
+    type: string
+  - name: resourcePrefix
+    displayName: Resource prefix
+    type: string
+  - name: scaleSetSpotInstance
+    displayName: Scale Set Spot Instance?
+    type: boolean
+  - name: createUbuntu20ScaleSet
+    displayName: Create Ubuntu20 Scale Set?
+    type: boolean
+  - name: createUbuntu18ScaleSet
+    displayName: Create Ubuntu18 Scale Set?
+    type: boolean
+  - name: storageAccountName
+    displayName: Storage Account Name
+    type: string
+  - name: storageContainerName
+    displayName: Storage Container used for tf state
+    type: string
+    default: "tfstate"
+  - name: imageGalleryName
+    displayName: Image Gallery Name
+    type: string
+
+steps:
+  - task: AzureCLI@2
+    displayName: Get Service Connection Information
+    inputs:
+      azureSubscription: ${{ parameters.serviceConnectionName }}
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        subscription_id=$(az account show -o json --query id | sed -e 's/^"//' -e 's/"$//')
+        object_id=$(az ad sp show --id $servicePrincipalId -o json --query objectId | sed -e 's/^"//' -e 's/"$//')
+        echo "##vso[task.setvariable variable=SUBSCRIPTION_ID;]$subscription_id"
+        echo "##vso[task.setvariable variable=SERVICE_PRINCIPAL_ID;]$servicePrincipalId"
+        echo "##vso[task.setvariable variable=SERVICE_PRINCIPAL_KEY;]$servicePrincipalKey"
+        echo "##vso[task.setvariable variable=SERVICE_PRINCIPAL_OBJECT_ID;]$object_id"
+        echo "##vso[task.setvariable variable=TENANT_ID;]$tenantId"
+      addSpnToEnvironment: true
+
+  - script: |
+      terraform init \
+        -backend-config="storage_account_name=${{ parameters.storageAccountName }}" \
+        -backend-config="key=build.agent.rg" \
+        -backend-config="container_name=${{ parameters.storageContainerName }}" \
+        -backend-config="subscription_id=$(SUBSCRIPTION_ID)" \
+        -backend-config="tenant_id=$(TENANT_ID)"
+      terraform plan -out=config \
+        -var 'resource_prefix=${{ parameters.resourcePrefix }}' \
+        -var 'state_storage_account_name=${{ parameters.storageAccountName }}' \
+        -var 'scale_set_spot_instance=${{ lower(parameters.scaleSetSpotInstance) }}' \
+        -var 'create_ubuntu20_scale_set=${{ lower(parameters.createUbuntu20ScaleSet) }}' \
+        -var 'create_ubuntu18_scale_set=${{ lower(parameters.createUbuntu18ScaleSet) }}' \
+        -var 'shared_image_gallery_name=${{ parameters.imageGalleryName }}'
+      terraform apply config
+    workingDirectory: terraform/scale_sets
+    displayName: Perform Terraform Operations
+    env:
+      ARM_CLIENT_ID: $(SERVICE_PRINCIPAL_ID)
+      ARM_SUBSCRIPTION_ID: $(SUBSCRIPTION_ID)
+      ARM_TENANT_ID: $(TENANT_ID)
+      ARM_CLIENT_SECRET:  $(SERVICE_PRINCIPAL_KEY)
