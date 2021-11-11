@@ -14,7 +14,14 @@ variable "scale_set_spot_instance" {
 }
 
 variable "create_ubuntu20_scale_set" {
-  description = "Set this to true if you want to create an ubunt20 scale set."
+  description = "Set this to true if you want to create an ubuntu20 scale set."
+  type = bool
+  default = false
+}
+
+
+variable "create_ubuntu18_scale_set" {
+  description = "Set this to true if you want to create an ubuntu18 scale set."
   type = bool
   default = false
 }

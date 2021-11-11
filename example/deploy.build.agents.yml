@@ -58,7 +58,7 @@ stages:
         imageGalleryName: $(imageGalleryName)
 
 - stage: DeployVMSSInstances
-  dependsOn: [CreateUbuntu20Image]
+  dependsOn: [CreateUbuntu20Image, CreateUbuntu18Image]
   jobs:
     - job: deployVmssUbuntu20
       steps:
@@ -68,5 +68,6 @@ stages:
           resourcePrefix: $(resourcePrefix)
           scaleSetSpotInstance: true
           createUbuntu20ScaleSet: true
+          createUbuntu18ScaleSet: true
           storageAccountName: $(storageAccountName)
           imageGalleryName: $(imageGalleryName)

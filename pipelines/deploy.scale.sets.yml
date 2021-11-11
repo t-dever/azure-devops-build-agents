@@ -11,6 +11,9 @@ parameters:
   - name: createUbuntu20ScaleSet
     displayName: Create Ubuntu20 Scale Set?
     type: boolean
+  - name: createUbuntu18ScaleSet
+    displayName: Create Ubuntu18 Scale Set?
+    type: boolean
   - name: storageAccountName
     displayName: Storage Account Name
     type: string
@@ -51,6 +54,7 @@ steps:
         -var 'state_storage_account_name=${{ parameters.storageAccountName }}' \
         -var 'scale_set_spot_instance=${{ lower(parameters.scaleSetSpotInstance) }}' \
         -var 'create_ubuntu20_scale_set=${{ lower(parameters.createUbuntu20ScaleSet) }}' \
+        -var 'create_ubuntu18_scale_set=${{ lower(parameters.createUbuntu18ScaleSet) }}' \
         -var 'shared_image_gallery_name=${{ parameters.imageGalleryName }}'
       terraform apply config
     workingDirectory: terraform/scale_sets
