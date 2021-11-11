@@ -49,7 +49,7 @@ steps:
         -var 'scale_set_spot_instance=${{ lower(parameters.scaleSetSpotInstance) }}' \
         -var 'create_ubuntu20_scale_set=${{ lower(parameters.createUbuntu20ScaleSet) }}'
       terraform apply config
-    workingDirectory: terraform/build_agents
+    workingDirectory: terraform/scale_sets
     displayName: Perform Terraform Operations
     env:
       ARM_CLIENT_ID: $(SERVICE_PRINCIPAL_ID)
