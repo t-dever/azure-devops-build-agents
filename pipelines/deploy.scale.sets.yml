@@ -18,6 +18,9 @@ parameters:
     displayName: Storage Container used for tf state
     type: string
     default: "tfstate"
+  - name: imageGalleryName
+    displayName: Image Gallery Name
+    type: string
 
 steps:
   - task: AzureCLI@2
@@ -47,7 +50,8 @@ steps:
         -var 'resource_prefix=${{ parameters.resourcePrefix }}' \
         -var 'state_storage_account_name=${{ parameters.storageAccountName }}' \
         -var 'scale_set_spot_instance=${{ lower(parameters.scaleSetSpotInstance) }}' \
-        -var 'create_ubuntu20_scale_set=${{ lower(parameters.createUbuntu20ScaleSet) }}'
+        -var 'create_ubuntu20_scale_set=${{ lower(parameters.createUbuntu20ScaleSet) }}' \
+        -var 'shared_image_gallery_name=${{ parameters.imageGalleryName }}'
       terraform apply config
     workingDirectory: terraform/scale_sets
     displayName: Perform Terraform Operations

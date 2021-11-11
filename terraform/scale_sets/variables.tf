@@ -18,3 +18,8 @@ variable "create_ubuntu20_scale_set" {
   type = bool
   default = false
 }
+
+variable "shared_image_gallery_name" {
+  description = "The image gallery name"
+  type = string
+}

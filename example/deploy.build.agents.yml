@@ -69,3 +69,4 @@ stages:
           scaleSetSpotInstance: true
           createUbuntu20ScaleSet: true
           storageAccountName: $(storageAccountName)
+          imageGalleryName: $(imageGalleryName)
