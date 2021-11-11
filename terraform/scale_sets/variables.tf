@@ -1,3 +1,7 @@
+variable "resource_prefix" {
+  description = "The prefix to the resource group that will be used for all created resources"
+}
+
 variable "state_storage_account_name" {
   description = "The name of the storage account where state is stored."
   type = string
