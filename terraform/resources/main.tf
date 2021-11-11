@@ -80,3 +80,53 @@ resource "azurerm_key_vault_secret" "build_agent_admin_secret" {
   value        = random_password.generate_build_agent_secret.result
   key_vault_id = azurerm_key_vault.key_vault.id
 }
+
+resource "azurerm_virtual_network" "virtual_network" {
+  name                = "${var.resource_prefix}-vnet"
+  resource_group_name = data.azurerm_resource_group.resource_group.name
+  location            = data.azurerm_resource_group.resource_group.location
+  address_space       = ["10.0.0.0/16"]
+}
+
+resource "azurerm_subnet" "internal" {
+  name                 = "internal"
+  resource_group_name  = data.azurerm_resource_group.resource_group.name
+  virtual_network_name = azurerm_virtual_network.virtual_network.name
+  address_prefixes     = ["10.0.2.0/24"]
+  service_endpoints    = ["Microsoft.Storage"]
+}
+
+resource "azurerm_nat_gateway" "nat_gateway" {
+  name                    = "${var.resource_prefix}-nat-gateway"
+  location                = data.azurerm_resource_group.resource_group.location
+  resource_group_name     = data.azurerm_resource_group.resource_group.name
+  sku_name                = "Standard"
+  idle_timeout_in_minutes = 10
+}
+
+resource "azurerm_subnet_nat_gateway_association" "nat_gateway_association" {
+  subnet_id      = azurerm_subnet.internal.id
+  nat_gateway_id = azurerm_nat_gateway.nat_gateway.id
+}
+
+resource "azurerm_public_ip" "public_ip" {
+  name                    = "${var.resource_prefix}-public-ip"
+  location                = data.azurerm_resource_group.resource_group.location
+  resource_group_name     = data.azurerm_resource_group.resource_group.name
+  sku                     = "Standard"
+  allocation_method       = "Static"
+  idle_timeout_in_minutes = 30
+}
+
+resource "azurerm_nat_gateway_public_ip_association" "nat_gateway_association" {
+  nat_gateway_id       = azurerm_nat_gateway.nat_gateway.id
+  public_ip_address_id = azurerm_public_ip.public_ip.id
+}
+
+resource "azurerm_storage_account" "scale_set_boot_diagnostics_storage_account" {
+  name                     = replace("${var.resource_prefix}bootsa", "-", "")
+  resource_group_name      = data.azurerm_resource_group.resource_group.name
+  location                 = data.azurerm_resource_group.resource_group.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}

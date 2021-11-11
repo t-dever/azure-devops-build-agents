@@ -57,10 +57,13 @@ stages:
         location: $(location)
         imageGalleryName: $(imageGalleryName)
 
-        # storageContainerName: tfstate
-        # resourcePrefix: $(resourcePrefix)
-        # userPrincipalId: "$(userPrincipalId)" # Object ID of your account
-
-
-        # scaleSetSpotInstance: false
-        # createUbuntu20ScaleSet: false
+- stage: DeployVMSSInstances
+  dependsOn: [CreateUbuntu20Image]
+  jobs:
+    - template: pipelines/deploy.scale.sets.yml@buildAgentRepo
+      parameters:
+        serviceConnectionName: TRAVIS_CONNECTION
+        resourcePrefix: $(resourcePrefix)
+        scaleSetSpotInstance: true
+        createUbuntu20ScaleSet: true
+        storageAccountName: $(storageAccountName)
