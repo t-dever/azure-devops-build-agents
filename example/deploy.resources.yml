@@ -3,12 +3,11 @@ pool:
   vmImage: ubuntu-latest
 
 schedules:
-- cron: "0 06 * * *"
+- cron: "0 06 * * Mon,Tue,Wed,Thu,Fri"
   displayName: Deploy Nat Gateway
   branches:
     include:
     - main
-    - features/addTearDown
 
 resources:
   repositories:

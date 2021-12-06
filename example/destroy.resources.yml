@@ -3,12 +3,11 @@ pool:
   vmImage: ubuntu-latest
 
 schedules:
-- cron: "0 18 * * *"
+- cron: "0 18 * * Mon,Tue,Wed,Thu,Fri"
   displayName: Destroy Nat Gateway
   branches:
     include:
     - main
-    - features/addTearDown
 
 variables:
   - group: build-agents
