@@ -1,0 +1,39 @@
+trigger: none
+pool:
+  vmImage: ubuntu-latest
+
+schedules:
+- cron: "0 06 * * Mon,Tue,Wed,Thu,Fri"
+  displayName: Deploy Nat Gateway
+  branches:
+    include:
+    - main
+
+resources:
+  repositories:
+  - repository: buildAgentRepo
+    type: github
+    endpoint: t-dever
+    name: t-dever/azure-devops-build-agents
+
+variables:
+  - group: build-agents
+
+stages:
+- stage: DeployBuildAgentResources
+  displayName: Deploy Build Agent Resource Group
+  jobs:
+  - job: DeployBuildAgentResourcesJob
+    steps:
+    - template: pipelines/deploy.resources.yml@buildAgentRepo
+      parameters:
+        serviceConnectionName: TRAVIS_CONNECTION
+        resourceGroup: $(resourceGroup)
+        tempResourceGroup: $(tempResourceGroup)
+        location: $(location)
+        storageAccountName: $(storageAccountName)
+        storageContainerName: tfstate
+        resourcePrefix: $(resourcePrefix)
+        userPrincipalId: "$(userPrincipalId)" # Object ID of your account
+        imageStorageAccountName: $(imageStorageAccountName)
+        imageGalleryName: $(imageGalleryName)

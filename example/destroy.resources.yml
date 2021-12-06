@@ -1,0 +1,30 @@
+trigger: none
+pool:
+  vmImage: ubuntu-latest
+
+schedules:
+- cron: "0 18 * * Mon,Tue,Wed,Thu,Fri"
+  displayName: Destroy Nat Gateway
+  branches:
+    include:
+    - main
+
+variables:
+  - group: build-agents
+
+stages:
+- stage: DestroyResources
+  displayName: Destroy Resources for cost Savings
+  jobs:
+  - job: DestroyJob
+    steps:
+      - task: AzureCLI@2
+        displayName: Remove NAT Gateway
+        inputs:
+          azureSubscription: $(serviceConnectionName)
+          scriptType: bash
+          scriptLocation: inlineScript
+          inlineScript: |
+            az network nat gateway update -g $(resourceGroup) --name $(resourcePrefix)-nat-gateway --remove publicIpAddresses
+            az network vnet subnet update -n internal --vnet-name $(resourcePrefix)-vnet -g $(resourceGroup) --remove natGateway
+            az network nat gateway delete -g $(resourceGroup) --name $(resourcePrefix)-nat-gateway
