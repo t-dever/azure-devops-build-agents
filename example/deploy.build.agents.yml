@@ -60,7 +60,7 @@ stages:
 - stage: DeployVMSSInstances
   dependsOn: [CreateUbuntu20Image, CreateUbuntu18Image]
   jobs:
-    - job: deployVmssUbuntu20
+    - job: deployVMSSInstancesJob
       steps:
       - template: pipelines/deploy.scale.sets.yml@buildAgentRepo
         parameters:
