@@ -17,6 +17,9 @@ resources:
     endpoint: t-dever
     name: t-dever/azure-devops-build-agents
 
+variables:
+  - group: build-agents
+
 stages:
 - stage: DeployBuildAgentResources
   displayName: Deploy Build Agent Resource Group

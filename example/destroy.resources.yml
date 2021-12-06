@@ -12,6 +12,7 @@ schedules:
 
 variables:
   - group: build-agents
+
 stages:
 - stage: DestroyResources
   displayName: Destroy Resources for cost Savings
