@@ -3,7 +3,7 @@ pool:
   vmImage: ubuntu-latest
 
 schedules:
-- cron: "0 18 * * Mon-Fri"
+- cron: "0 0 * * Mon-Fri"
   displayName: Destroy Nat Gateway
   branches:
     include:
