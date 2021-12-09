@@ -3,7 +3,7 @@ pool:
   vmImage: ubuntu-latest
 
 schedules:
-- cron: "0 12 * * Mon-Fri"
+- cron: "0 12 * * Mon,Tues,Wed,Thu,Fri"
   displayName: Deploy Nat Gateway
   branches:
     include:
