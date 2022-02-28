@@ -88,8 +88,6 @@ jobs:
         azureResourceGroup: ${{ parameters.resourceGroup }}
         imageUri: PACKER_VHD_FILE_URI
 
-          # "location": "${{ parameters.location }}",
-
     - task: AzureCLI@2
       displayName: Create Managed Image and Add to Image Gallery
       inputs:
@@ -118,8 +116,10 @@ jobs:
             --gallery-image-definition ${{ variables.imageType }} \
             --gallery-image-version "$date" \
             --managed-image $imageId
-          az image delete --ids $imageId
-          az storage blob delete-batch \
-            -s system \
-            --account-name ${{ parameters.imageStorageAccountName }} \
-            --pattern Microsoft.Compute/Images/images/${{ variables.imageType }}*
+
+
+# az image delete --ids $imageId
+# az storage blob delete-batch \
+#   -s system \
+#   --account-name ${{ parameters.imageStorageAccountName }} \
+#   --pattern Microsoft.Compute/Images/images/${{ variables.imageType }}*
